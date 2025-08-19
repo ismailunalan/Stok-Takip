@@ -52,6 +52,14 @@
             searchBar = new TextBox();
             comboBox1 = new ComboBox();
             productsGridView = new DataGridView();
+            hiddenIdLabel = new Label();
+            usdLabel = new Label();
+            usdBox = new TextBox();
+            eurBox = new TextBox();
+            label10 = new Label();
+            comboBox2 = new ComboBox();
+            cancelButton = new Button();
+            sqlCommand1 = new Microsoft.Data.SqlClient.SqlCommand();
             ((System.ComponentModel.ISupportInitialize)productsGridView).BeginInit();
             SuspendLayout();
             // 
@@ -160,7 +168,7 @@
             // 
             label5.AutoSize = true;
             label5.Font = new Font("Segoe UI", 14F);
-            label5.Location = new Point(562, 331);
+            label5.Location = new Point(562, 330);
             label5.Name = "label5";
             label5.Size = new Size(188, 38);
             label5.TabIndex = 18;
@@ -275,7 +283,7 @@
             // 
             // productsGridView
             // 
-            productsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            productsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
             productsGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             productsGridView.Location = new Point(41, 428);
             productsGridView.Name = "productsGridView";
@@ -284,14 +292,97 @@
             productsGridView.Size = new Size(964, 233);
             productsGridView.TabIndex = 30;
             productsGridView.CellContentDoubleClick += productsGridView_CellContentDoubleClick;
+            productsGridView.CellFormatting += productsGridView_CellFormatting_1;
             productsGridView.ColumnHeaderMouseClick += productsGridView_ColumnHeaderMouseClick;
             productsGridView.SelectionChanged += productsGridView_SelectionChanged_1;
+            // 
+            // hiddenIdLabel
+            // 
+            hiddenIdLabel.Location = new Point(41, 9);
+            hiddenIdLabel.Name = "hiddenIdLabel";
+            hiddenIdLabel.Size = new Size(10, 10);
+            hiddenIdLabel.TabIndex = 31;
+            hiddenIdLabel.Text = "label10";
+            hiddenIdLabel.Visible = false;
+            // 
+            // usdLabel
+            // 
+            usdLabel.AutoSize = true;
+            usdLabel.Location = new Point(625, 666);
+            usdLabel.Name = "usdLabel";
+            usdLabel.Size = new Size(113, 25);
+            usdLabel.TabIndex = 32;
+            usdLabel.Text = "USD Selling :";
+            // 
+            // usdBox
+            // 
+            usdBox.Enabled = false;
+            usdBox.Location = new Point(744, 663);
+            usdBox.Name = "usdBox";
+            usdBox.Size = new Size(60, 31);
+            usdBox.TabIndex = 33;
+            // 
+            // eurBox
+            // 
+            eurBox.Enabled = false;
+            eurBox.Location = new Point(929, 663);
+            eurBox.Name = "eurBox";
+            eurBox.Size = new Size(60, 31);
+            eurBox.TabIndex = 35;
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Location = new Point(810, 666);
+            label10.Name = "label10";
+            label10.Size = new Size(110, 25);
+            label10.TabIndex = 34;
+            label10.Text = "EUR Selling :";
+            // 
+            // comboBox2
+            // 
+            comboBox2.BackColor = SystemColors.ActiveBorder;
+            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox2.ForeColor = SystemColors.WindowFrame;
+            comboBox2.FormattingEnabled = true;
+            comboBox2.ItemHeight = 25;
+            comboBox2.Items.AddRange(new object[] { "TL", "USD", "EUR" });
+            comboBox2.Location = new Point(648, 335);
+            comboBox2.Name = "comboBox2";
+            comboBox2.Size = new Size(70, 33);
+            comboBox2.TabIndex = 36;
+            comboBox2.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
+            // 
+            // cancelButton
+            // 
+            cancelButton.BackColor = Color.Transparent;
+            cancelButton.Location = new Point(941, 38);
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new Size(78, 73);
+            cancelButton.TabIndex = 37;
+            cancelButton.Text = "Cancel\r\nEditing\r\n";
+            cancelButton.UseVisualStyleBackColor = false;
+            cancelButton.Visible = false;
+            cancelButton.Click += cancelButton_Click;
+            // 
+            // sqlCommand1
+            // 
+            sqlCommand1.CommandTimeout = 30;
+            sqlCommand1.EnableOptimizedParameterBinding = false;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.ButtonFace;
             ClientSize = new Size(1045, 700);
+            Controls.Add(cancelButton);
+            Controls.Add(comboBox2);
+            Controls.Add(eurBox);
+            Controls.Add(label10);
+            Controls.Add(usdBox);
+            Controls.Add(usdLabel);
+            Controls.Add(hiddenIdLabel);
             Controls.Add(productsGridView);
             Controls.Add(comboBox1);
             Controls.Add(searchBar);
@@ -350,5 +441,13 @@
         private TextBox searchBar;
         private ComboBox comboBox1;
         private DataGridView productsGridView;
+        private Label hiddenIdLabel;
+        private Label usdLabel;
+        private TextBox usdBox;
+        private TextBox eurBox;
+        private Label label10;
+        private ComboBox comboBox2;
+        private Button cancelButton;
+        private Microsoft.Data.SqlClient.SqlCommand sqlCommand1;
     }
 }

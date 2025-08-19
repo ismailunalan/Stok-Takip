@@ -1,13 +1,17 @@
-﻿using Microsoft.Data.SqlClient;
-using Stok_Takip.Models;
+﻿using Stok_Takip.Models;
 using Stok_Takip.Services;
+using System.Xml.Linq;
 
 namespace Stok_Takip
 {
     public partial class Form1 : Form
     {
         internal string server = @"Server=localhost;Database=StokTakipDB;Integrated Security=True;TrustServerCertificate=True;";
+        internal string url = "https://www.tcmb.gov.tr/kurlar/today.xml";
+
         private StockService stockService;
+        private System.Windows.Forms.Timer timer1;
+
 
         public Form1()
         {
@@ -27,6 +31,48 @@ namespace Stok_Takip
             setSearchBarState();
             setSearchByState();
             comboBox1.SelectedIndex = 0;
+            currencyDisplayer(sender, e);
+        }
+
+        private async void currencyDisplayer(object sender, EventArgs e)
+        {
+            comboBox2.SelectedIndex = 0;
+            currencyDisplay(sender, e);
+            timer1 = new System.Windows.Forms.Timer();
+            timer1.Interval = 30000;
+            timer1.Tick += currencyDisplay;
+            timer1.Start();
+        }
+
+        private decimal usdRate = 0m;
+        private decimal eurRate = 0m;
+        private async void currencyDisplay(object sender, EventArgs e)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string response = await client.GetStringAsync(url);
+
+                XDocument xmlDoc = XDocument.Parse(response);
+
+                var usdNode = xmlDoc.Descendants("Currency").FirstOrDefault(x => x.Attribute("Kod")?.Value == "USD");
+                var eurNode = xmlDoc.Descendants("Currency").FirstOrDefault(x => x.Attribute("Kod")?.Value == "EUR");
+
+                if (usdNode != null)
+                {
+                    string usdForexSelling = usdNode.Element("ForexSelling")?.Value;
+                    decimal.TryParse(usdForexSelling, System.Globalization.NumberStyles.Any,
+                                     System.Globalization.CultureInfo.InvariantCulture, out usdRate);
+                    usdBox.Text = usdRate.ToString("F4");
+                }
+
+                if (eurNode != null)
+                {
+                    string eurForexSelling = eurNode.Element("ForexSelling")?.Value;
+                    decimal.TryParse(eurForexSelling, System.Globalization.NumberStyles.Any,
+                                     System.Globalization.CultureInfo.InvariantCulture, out eurRate);
+                    eurBox.Text = eurRate.ToString("F4");
+                }
+            }
         }
 
         private void setSearchBarState()
@@ -79,6 +125,7 @@ namespace Stok_Takip
         {
             Product p = new Product
             {
+                ProductId = int.TryParse(hiddenIdLabel.Text, out int id) ? id : 0,
                 StockCode = codeTextBox.Text,
                 StockName = nameTextBox.Text,
                 Barcode = string.IsNullOrWhiteSpace(barcodeTextBox.Text) ? null : barcodeTextBox.Text,
@@ -89,13 +136,10 @@ namespace Stok_Takip
                 Price = decimal.TryParse(priceTextBox.Text, out decimal price) ? price : null
             };
 
-            if (!string.IsNullOrEmpty(codeTextBox.Text))
+            if (p.ProductId > 0)
             {
-                p.StockCode = codeTextBox.Text;
-
-
-
                 stockService.updateProduct(p);
+                cancelButton_Click(sender, e);
             }
             else
             {
@@ -113,9 +157,9 @@ namespace Stok_Takip
 
         private void refreshList(string clickedColumn, bool lastSort)
         {
-            string[] allowedColumns = { "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
+            string[] allowedColumns = { "product_id", "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
             if (string.IsNullOrWhiteSpace(clickedColumn) || !allowedColumns.Contains(clickedColumn))
-                clickedColumn = "stock_code";
+                clickedColumn = "product_id";
 
             List<Product> products = stockService.getProducts(
                 clickedColumn,
@@ -127,11 +171,17 @@ namespace Stok_Takip
             productsGridView.DataSource = null;
             productsGridView.DataSource = products;
 
-            productsGridView.ClearSelection(); // seçim temizle
+            if (productsGridView.Columns["ProductId"] != null)
+            {
+                productsGridView.Columns["ProductId"].Visible = false;
+            }
+
+            productsGridView.ClearSelection();
         }
 
         private void clearBoxes()
         {
+            hiddenIdLabel.Text = "0";
             codeTextBox.Clear();
             nameTextBox.Clear();
             shelfTextBox.Clear();
@@ -152,8 +202,8 @@ namespace Stok_Takip
         {
             foreach (DataGridViewRow row in productsGridView.SelectedRows)
             {
-                string stockCode = row.Cells["StockCode"].Value.ToString();
-                stockService.deleteProduct(stockCode);
+                int productId = Convert.ToInt32(row.Cells["ProductId"].Value);
+                stockService.deleteProduct(productId);
             }
             refreshList(clickedColumn, lastSort);
         }
@@ -164,7 +214,7 @@ namespace Stok_Takip
 
         private void productsGridView_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            string[] columns = { "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
+            string[] columns = { "product_id", "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
             clickedColumn = columns[e.ColumnIndex];
 
             if (lastSortColumn == clickedColumn)
@@ -185,6 +235,7 @@ namespace Stok_Takip
             {
                 DataGridViewRow selectedRow = productsGridView.SelectedRows[0];
 
+                hiddenIdLabel.Text = selectedRow.Cells["ProductId"].Value?.ToString() ?? "";
                 codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
                 nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
                 barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
@@ -201,66 +252,109 @@ namespace Stok_Takip
         {
             if (productsGridView.SelectedRows.Count > 0)
             {
-                DataGridViewRow selectedRow = productsGridView.SelectedRows[0];
-
-                codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
-                nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
-                barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
-                shelfTextBox.Text = selectedRow.Cells["ShelfNo"].Value?.ToString() ?? "";
-                groupComboBox.Text = selectedRow.Cells["StockGroup"].Value?.ToString() ?? "";
-                typeComboBox.Text = selectedRow.Cells["StockType"].Value?.ToString() ?? "";
-                taxComboBox.Text = selectedRow.Cells["TaxRate"].Value?.ToString() ?? "";
-                priceTextBox.Text = selectedRow.Cells["Price"].Value?.ToString() ?? "";
-
+                saveButton.Text = "Update";
+                cancelButton.Visible = true;
+                comboBox2.SelectedIndex = 0;
+                FillProductForm(productsGridView.SelectedRows[0]);
             }
         }
 
         private void productsGridView_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if(e.RowIndex >= 0)
+            if (e.RowIndex >= 0)
             {
-
-                DataGridViewRow selectedRow = productsGridView.Rows[e.RowIndex];
-
-
-                codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
-                nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
-                barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
-                shelfTextBox.Text = selectedRow.Cells["ShelfNo"].Value?.ToString() ?? "";
-
-                string groupValue = selectedRow.Cells["StockGroup"].Value?.ToString();
-                if (!string.IsNullOrEmpty(groupValue))
-                {
-                    int index = groupComboBox.Items.IndexOf(groupValue);
-                    groupComboBox.SelectedIndex = index; 
-                }
-
-                string typeValue = selectedRow.Cells["StockType"].Value?.ToString();
-                if (!string.IsNullOrEmpty(typeValue))
-                {
-                    int index = typeComboBox.Items.IndexOf(typeValue);
-                    typeComboBox.SelectedIndex = index;
-                }
-
-                string taxValue = selectedRow.Cells["TaxRate"].Value?.ToString();
-                if (!string.IsNullOrEmpty(taxValue))
-                {
-                    int taxInt = (int)Math.Round(Convert.ToDecimal(taxValue.Trim()));
-
-                    foreach (var item in taxComboBox.Items)
-                    {
-                        string itemText = item.ToString().Replace("%", "").Trim();
-                        if (int.TryParse(itemText, out int itemTax) && itemTax == taxInt)
-                        {
-                            taxComboBox.SelectedItem = item;
-                            break;
-                        }
-                    }
-                }
-
-                priceTextBox.Text = selectedRow.Cells["Price"].Value?.ToString() ?? "";
-
+                productsGridView.ClearSelection();
+                productsGridView.Rows[e.RowIndex].Selected = true;
+                saveButton.Text = "Update";
+                cancelButton.Visible = true;
+                comboBox2.SelectedIndex = 0;
+                FillProductForm(productsGridView.Rows[e.RowIndex]);
             }
         }
+
+        private void FillProductForm(DataGridViewRow selectedRow)
+        {
+            if (selectedRow == null) return;
+
+            hiddenIdLabel.Text = selectedRow.Cells["ProductId"].Value?.ToString() ?? "";
+            codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
+            nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
+            barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
+            shelfTextBox.Text = selectedRow.Cells["ShelfNo"].Value?.ToString() ?? "";
+            priceTextBox.Text = selectedRow.Cells["Price"].Value?.ToString() ?? "";
+
+            string groupValue = selectedRow.Cells["StockGroup"].Value?.ToString();
+            if (!string.IsNullOrEmpty(groupValue))
+            {
+                int index = groupComboBox.Items.IndexOf(groupValue);
+                if (index >= 0) groupComboBox.SelectedIndex = index;
+            }
+
+            string typeValue = selectedRow.Cells["StockType"].Value?.ToString();
+            if (!string.IsNullOrEmpty(typeValue))
+            {
+                int index = typeComboBox.Items.IndexOf(typeValue);
+                if (index >= 0) typeComboBox.SelectedIndex = index;
+            }
+
+            string taxValue = selectedRow.Cells["TaxRate"].Value?.ToString();
+            if (!string.IsNullOrEmpty(taxValue))
+            {
+                int taxInt = (int)Math.Round(Convert.ToDecimal(taxValue.Trim()));
+                foreach (var item in taxComboBox.Items)
+                {
+                    string itemText = item.ToString().Replace("%", "").Trim();
+                    if (int.TryParse(itemText, out int itemTax) && itemTax == taxInt)
+                    {
+                        taxComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            productsGridView.Refresh();
+        }
+
+        private void productsGridView_CellFormatting_1(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (productsGridView.Columns[e.ColumnIndex].Name == "Price" && e.Value != null && e.Value is decimal)
+            {
+                decimal val = (decimal)e.Value;
+
+                if (comboBox2.SelectedIndex == 1 && usdRate > 0)
+                {
+                    e.Value = $"{(val / usdRate):F2} USD";
+                    e.FormattingApplied = true;
+                }
+                else if (comboBox2.SelectedIndex == 2 && eurRate > 0)
+                {
+                    e.Value = $"{(val / eurRate):F2} EUR";
+                    e.FormattingApplied = true;
+                }
+                else
+                {
+                    e.Value = $"{val:F2} TL";
+                    e.FormattingApplied = true;
+                }
+            }
+        }
+
+        private void cancelButton_Click(object sender, EventArgs e)
+        {
+            productsGridView.ClearSelection();
+
+            saveButton.Text = "Save";
+
+            clearBoxes();
+
+            hiddenIdLabel.Text = "";
+
+            cancelButton.Visible = false;
+        }
+
     }
 }

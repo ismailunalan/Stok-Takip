@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Stok_Takip.Models;
 
-
 namespace Stok_Takip.Services
 {
     public class StockService
@@ -19,7 +18,8 @@ namespace Stok_Takip.Services
                 connection.Open();
 
                 string query = @"INSERT INTO Products (stock_code, stock_name, barcode, shelf_no, stock_group, stock_type, tax_rate, price) 
-                                 VALUES (@code, @name, @barcode, @shelf, @group, @type, @tax, @price)";
+                                     VALUES (@code, @name, @barcode, @shelf, @group, @type, @tax, @price);
+                                     SELECT SCOPE_IDENTITY();";
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
@@ -32,23 +32,26 @@ namespace Stok_Takip.Services
                     command.Parameters.AddWithValue("@tax", (object?)p.TaxRate ?? DBNull.Value);
                     command.Parameters.AddWithValue("@price", (object?)p.Price ?? DBNull.Value);
 
-                    command.ExecuteNonQuery();
-
+                    object result = command.ExecuteScalar();
+                    p.ProductId = Convert.ToInt32(result);
+                    MessageBox.Show("Ürün başarıyla kaydedildi!");
                 }
             }
         }
-        public void deleteProduct(string stockCode)
+
+        public void deleteProduct(int productId)
         {
             using (SqlConnection connection = new SqlConnection(server))
             {
                 connection.Open();
 
-                string query = "DELETE FROM Products WHERE stock_code = @code";
+                string query = "DELETE FROM Products WHERE product_id = @id";
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@code", stockCode);
+                    command.Parameters.AddWithValue("@id", productId);
                     command.ExecuteNonQuery();
                 }
+                MessageBox.Show("Ürün başarıyla silindi!");
             }
         }
 
@@ -63,14 +66,15 @@ namespace Stok_Takip.Services
                 string direction = ascending ? "ASC" : "DESC";
                 string query;
 
+                string columns = "product_id, stock_code, stock_name, barcode, shelf_no, stock_group, stock_type, tax_rate, price";
+
                 if (!string.IsNullOrWhiteSpace(searchText) && !string.IsNullOrWhiteSpace(searchColumn))
                 {
-                    query = $"SELECT * FROM Products WHERE CAST({searchColumn} AS NVARCHAR) LIKE @searchTerm ORDER BY {sortColumn} {direction}";
+                    query = $"SELECT {columns} FROM Products WHERE CAST({searchColumn} AS NVARCHAR) LIKE @searchTerm ORDER BY {sortColumn} {direction}";
                 }
                 else
                 {
-                    query = $"SELECT * FROM Products ORDER BY {sortColumn} {direction}";
-
+                    query = $"SELECT {columns} FROM Products ORDER BY {sortColumn} {direction}";
                 }
 
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -83,9 +87,9 @@ namespace Stok_Takip.Services
                     using SqlDataReader reader = command.ExecuteReader();
                     while (reader.Read())
                     {
-
                         products.Add(new Product
                         {
+                            ProductId = Convert.ToInt32(reader["product_id"]),
                             StockCode = reader["stock_code"].ToString(),
                             StockName = reader["stock_name"].ToString(),
                             Barcode = reader["barcode"] == DBNull.Value ? null : reader["barcode"].ToString(),
@@ -95,12 +99,9 @@ namespace Stok_Takip.Services
                             TaxRate = reader["tax_rate"] == DBNull.Value ? null : (int?)Convert.ToInt32(reader["tax_rate"]),
                             Price = reader["price"] == DBNull.Value ? null : (decimal?)Convert.ToDecimal(reader["price"])
                         });
-
                     }
-
                     return products;
                 }
-
             }
         }
 
@@ -111,17 +112,19 @@ namespace Stok_Takip.Services
                 connection.Open();
 
                 string query = @"UPDATE Products
-                     SET stock_name = @name,
-                         barcode = @barcode,
-                         shelf_no = @shelf,
-                         stock_group = @group,
-                         stock_type = @type,
-                         tax_rate = @tax,
-                         price = @price
-                     WHERE stock_code = @code";
+                                 SET stock_code = @code,
+                                     stock_name = @name,
+                                     barcode = @barcode,
+                                     shelf_no = @shelf,
+                                     stock_group = @group,
+                                     stock_type = @type,
+                                     tax_rate = @tax,
+                                     price = @price
+                                 WHERE product_id = @id";
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
+                    command.Parameters.AddWithValue("@id", p.ProductId);
                     command.Parameters.AddWithValue("@code", p.StockCode);
                     command.Parameters.AddWithValue("@name", p.StockName);
                     command.Parameters.AddWithValue("@barcode", (object?)p.Barcode ?? DBNull.Value);
@@ -132,10 +135,9 @@ namespace Stok_Takip.Services
                     command.Parameters.AddWithValue("@price", (object?)p.Price ?? DBNull.Value);
 
                     command.ExecuteNonQuery();
+                    MessageBox.Show("Ürün başarıyla güncellendi!");
                 }
             }
-
         }
-
     }
 }
