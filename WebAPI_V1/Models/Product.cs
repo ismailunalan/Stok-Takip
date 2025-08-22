@@ -9,7 +9,7 @@
         public int ShelfNo { get; set; }
         public string Group { get; set; }
         public string Type { get; set; }
-        public int Tax { get; set; }
+        public int TaxRate { get; set; }
         public int Price { get; set; }
     }
 }

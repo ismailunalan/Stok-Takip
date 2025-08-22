@@ -60,7 +60,6 @@
             comboBox2 = new ComboBox();
             cancelButton = new Button();
             sqlCommand1 = new Microsoft.Data.SqlClient.SqlCommand();
-            fsagasga = new RadioButton();
             idShowCheck = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)productsGridView).BeginInit();
             SuspendLayout();
@@ -372,13 +371,6 @@
             sqlCommand1.CommandTimeout = 30;
             sqlCommand1.EnableOptimizedParameterBinding = false;
             // 
-            // fsagasga
-            // 
-            fsagasga.Location = new Point(0, 0);
-            fsagasga.Name = "fsagasga";
-            fsagasga.Size = new Size(104, 24);
-            fsagasga.TabIndex = 40;
-            // 
             // idShowCheck
             // 
             idShowCheck.AutoSize = true;
@@ -397,7 +389,6 @@
             BackColor = SystemColors.ButtonFace;
             ClientSize = new Size(1045, 700);
             Controls.Add(idShowCheck);
-            Controls.Add(fsagasga);
             Controls.Add(cancelButton);
             Controls.Add(comboBox2);
             Controls.Add(eurBox);
@@ -471,7 +462,6 @@
         private ComboBox comboBox2;
         private Button cancelButton;
         private Microsoft.Data.SqlClient.SqlCommand sqlCommand1;
-        private RadioButton fsagasga;
         private CheckBox idShowCheck;
     }
 }
