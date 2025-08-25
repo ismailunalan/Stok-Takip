@@ -37,7 +37,7 @@
             label4 = new Label();
             codeTextBox = new TextBox();
             nameTextBox = new TextBox();
-            shelfTextBox = new TextBox();
+            quantityTextBox = new TextBox();
             barcodeTextBox = new TextBox();
             label5 = new Label();
             label6 = new Label();
@@ -61,8 +61,6 @@
             cancelButton = new Button();
             sqlCommand1 = new Microsoft.Data.SqlClient.SqlCommand();
             idShowCheck = new CheckBox();
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
             ((System.ComponentModel.ISupportInitialize)productsGridView).BeginInit();
             SuspendLayout();
             // 
@@ -135,9 +133,9 @@
             label4.Font = new Font("Segoe UI", 14F);
             label4.Location = new Point(41, 330);
             label4.Name = "label4";
-            label4.Size = new Size(173, 38);
+            label4.Size = new Size(177, 38);
             label4.TabIndex = 10;
-            label4.Text = "Shelf no      :";
+            label4.Text = "Quantity      :";
             // 
             // codeTextBox
             // 
@@ -153,12 +151,12 @@
             nameTextBox.Size = new Size(242, 31);
             nameTextBox.TabIndex = 12;
             // 
-            // shelfTextBox
+            // quantityTextBox
             // 
-            shelfTextBox.Location = new Point(211, 340);
-            shelfTextBox.Name = "shelfTextBox";
-            shelfTextBox.Size = new Size(242, 31);
-            shelfTextBox.TabIndex = 14;
+            quantityTextBox.Location = new Point(211, 340);
+            quantityTextBox.Name = "quantityTextBox";
+            quantityTextBox.Size = new Size(242, 31);
+            quantityTextBox.TabIndex = 14;
             // 
             // barcodeTextBox
             // 
@@ -211,7 +209,7 @@
             // 
             groupComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             groupComboBox.FormattingEnabled = true;
-            groupComboBox.Items.AddRange(new object[] { "Kimyasal", "Yapı" });
+            groupComboBox.Items.AddRange(new object[] { "Elektronik", "Bilgisayar Parçaları", "Ofis Malzemeleri", "Kırtasiye", "Mobilya", "Temizlik Ürünleri", "Gıda ve İçecek", "Kişisel Bakım", "Ev Aletleri", "Aydınlatma", "Bahçe ve Hırdavat", "Otomotiv Yedek Parça", "Telefon Aksesuarları", "Beyaz Eşya", "Tekstil", "Ayakkabı", "Oyuncak", "Spor Malzemeleri", "Medikal Ürünler", "Mutfak Gereçleri" });
             groupComboBox.Location = new Point(763, 157);
             groupComboBox.Name = "groupComboBox";
             groupComboBox.Size = new Size(243, 33);
@@ -221,7 +219,7 @@
             // 
             typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             typeComboBox.FormattingEnabled = true;
-            typeComboBox.Items.AddRange(new object[] { "Su", "Kalem" });
+            typeComboBox.Items.AddRange(new object[] { "Tüketim Malzemesi", "Dayanıklı Tüketim", "Yedek Parça", "Hizmet", "Ham Madde", "Yarı Mamul", "Tamamlanmış Ürün", "Promosyon Ürünü", "İthal Ürün", "Yerli Ürün", "Dijital Lisans", "Kiralık Ekipman", "Tek Kullanımlık", "Perakende Ürün", "Toplu Satış Ürünü" });
             typeComboBox.Location = new Point(763, 220);
             typeComboBox.Name = "typeComboBox";
             typeComboBox.Size = new Size(243, 33);
@@ -231,7 +229,7 @@
             // 
             taxComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             taxComboBox.FormattingEnabled = true;
-            taxComboBox.Items.AddRange(new object[] { "% 8", "% 18" });
+            taxComboBox.Items.AddRange(new object[] { "%1", "%8", "%10", "%18", "%20", "%25" });
             taxComboBox.Location = new Point(763, 278);
             taxComboBox.Name = "taxComboBox";
             taxComboBox.Size = new Size(243, 33);
@@ -278,7 +276,7 @@
             // 
             comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "Stock Code", "Stock Name", "Barcode", "Shelf No", "Stock Group", "Stock Type", "Tax Rate", "Price" });
+            comboBox1.Items.AddRange(new object[] { "Stock Code", "Stock Name", "Barcode", "Quantity", "Stock Group", "Stock Type", "Tax Rate", "Price" });
             comboBox1.Location = new Point(286, 389);
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(129, 33);
@@ -384,15 +382,12 @@
             idShowCheck.UseVisualStyleBackColor = true;
             idShowCheck.CheckedChanged += idShowCheck_CheckedChanged;
             // 
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ButtonFace;
             ClientSize = new Size(1045, 700);
-<<<<<<< HEAD
             Controls.Add(idShowCheck);
             Controls.Add(cancelButton);
             Controls.Add(comboBox2);
@@ -414,7 +409,7 @@
             Controls.Add(label6);
             Controls.Add(label7);
             Controls.Add(label8);
-            Controls.Add(shelfTextBox);
+            Controls.Add(quantityTextBox);
             Controls.Add(barcodeTextBox);
             Controls.Add(nameTextBox);
             Controls.Add(codeTextBox);
@@ -444,7 +439,7 @@
         private Label label4;
         private TextBox codeTextBox;
         private TextBox nameTextBox;
-        private TextBox shelfTextBox;
+        private TextBox quantityTextBox;
         private TextBox barcodeTextBox;
         private Label label5;
         private Label label6;

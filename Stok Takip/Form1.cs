@@ -1,5 +1,7 @@
 ﻿using Stok_Takip.Models;
 using Stok_Takip.Services;
+using System.Net;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Stok_Takip
@@ -9,14 +11,14 @@ namespace Stok_Takip
         internal string server = @"Server=localhost;Database=StokTakipDB;Integrated Security=True;TrustServerCertificate=True;";
         internal string url = "https://www.tcmb.gov.tr/kurlar/today.xml";
 
-        private StockService stockService;
+        private StockServices_APIVersion stockService_APIVersion;
         private System.Windows.Forms.Timer timer1;
 
 
         public Form1()
         {
             InitializeComponent();
-            stockService = new StockService(server);
+            stockService_APIVersion = new StockServices_APIVersion();
         }
 
         public class ComboBoxItem
@@ -32,13 +34,12 @@ namespace Stok_Takip
             setSearchByState();
             comboBox1.SelectedIndex = 0;
             currencyDisplayer(sender, e);
-            if (productsGridView.Columns["ProductId"] != null)
+            idShowCheck.Checked = true;
+            if (productsGridView.Columns["Id"] != null)
             {
                 productsGridView.Columns["Id"].Visible = idShowCheck.Checked;
             }
 
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
         }
 
         private async void currencyDisplayer(object sender, EventArgs e)
@@ -113,14 +114,14 @@ namespace Stok_Takip
         {
             var columnOptions = new List<ComboBoxItem>
             {
-                new ComboBoxItem { Display = "Stock Code", Value = "stock_code" },
-                new ComboBoxItem { Display = "Stock Name", Value = "stock_name" },
-                new ComboBoxItem { Display = "Barcode", Value = "barcode" },
-                new ComboBoxItem { Display = "Shelf No", Value = "shelf_no" },
-                new ComboBoxItem { Display = "Stock Group", Value = "stock_group" },
-                new ComboBoxItem { Display = "Stock Type", Value = "stock_type" },
-                new ComboBoxItem { Display = "Tax Rate", Value = "tax_rate" },
-                new ComboBoxItem { Display = "Price", Value = "price" }
+                new ComboBoxItem { Display = "Stock Code", Value = "Code" },
+                new ComboBoxItem { Display = "Stock Name", Value = "Name" },
+                new ComboBoxItem { Display = "Barcode", Value = "Barcode" },
+                new ComboBoxItem { Display = "Quantity", Value = "Quantity" },
+                new ComboBoxItem { Display = "Stock Group", Value = "Group" },
+                new ComboBoxItem { Display = "Stock Type", Value = "Type" },
+                new ComboBoxItem { Display = "Tax Rate", Value = "TaxRate" },
+                new ComboBoxItem { Display = "Price", Value = "Price" }
             };
 
             comboBox1.DataSource = columnOptions;
@@ -128,76 +129,82 @@ namespace Stok_Takip
             comboBox1.ValueMember = "Value";
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
+        private async void saveButton_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(codeTextBox.Text))
+            {
+                MessageBox.Show("Stok kodu boş olamaz.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nameTextBox.Text))
+            {
+                MessageBox.Show("Stok adı boş olamaz.");
+                return;
+            }
+
             Product p = new Product
             {
-                ProductId = int.TryParse(hiddenIdLabel.Text, out int id) ? id : 0,
-                StockCode = codeTextBox.Text,
-                StockName = nameTextBox.Text,
+                Id = int.TryParse(hiddenIdLabel.Text, out int id) ? id : 0,
+                Code = codeTextBox.Text,
+                Name = nameTextBox.Text,
                 Barcode = string.IsNullOrWhiteSpace(barcodeTextBox.Text) ? null : barcodeTextBox.Text,
-                ShelfNo = int.TryParse(shelfTextBox.Text, out int shelf) ? shelf : null,
-                StockGroup = string.IsNullOrWhiteSpace(groupComboBox.Text) ? null : groupComboBox.Text,
-                StockType = string.IsNullOrWhiteSpace(typeComboBox.Text) ? null : typeComboBox.Text,
+                Quantity = int.TryParse(quantityTextBox.Text, out int quantity) ? quantity : null,
+                Group = string.IsNullOrWhiteSpace(groupComboBox.Text) ? null : groupComboBox.Text,
+                Type = string.IsNullOrWhiteSpace(typeComboBox.Text) ? null : typeComboBox.Text,
                 TaxRate = int.TryParse(taxComboBox.Text.Replace("%", ""), out int tax) ? tax : null,
                 Price = decimal.TryParse(priceTextBox.Text, out decimal price) ? price : null
             };
 
-            if (p.ProductId > 0)
+            if (p.Id > 0)
             {
-                stockService.updateProduct(p);
+                await stockService_APIVersion.UpdateProductAsync(p);
                 cancelButton_Click(sender, e);
+                await refreshList(clickedColumn, lastSort);
             }
             else
             {
-                stockService.addProduct(p);
+                await stockService_APIVersion.AddProductAsync(p);
+                await refreshList(clickedColumn, lastSort);
             }
 
-            refreshList(clickedColumn, lastSort);
             clearBoxes();
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private async void button3_Click(object sender, EventArgs e)
         {
-            refreshList(clickedColumn, lastSort);
+            await refreshList(clickedColumn, lastSort);
         }
 
-        private void refreshList(string clickedColumn, bool lastSort)
+        private async Task refreshList(string clickedColumn, bool lastSort)
         {
-            string[] allowedColumns = { "product_id", "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
-            if (string.IsNullOrWhiteSpace(clickedColumn) || !allowedColumns.Contains(clickedColumn))
-                clickedColumn = "product_id";
+            string? searchText = (!string.IsNullOrWhiteSpace(searchBar.Text) && searchBar.Text != "Search...")
+                ? searchBar.Text.Trim()
+                : null;
 
-            List<Product> products = stockService.getProducts(
-                clickedColumn,
-                lastSort,
-                comboBox1.SelectedValue?.ToString(),
-                searchBar.Text != "Search..." ? searchBar.Text : null
+            string? searchCol = null;
+            if (comboBox1.SelectedItem is ComboBoxItem item && !string.IsNullOrWhiteSpace(item.Value))
+                searchCol = item.Value;
+
+            var products = await stockService_APIVersion.GetAllProductsAsync(
+                sortColumn: string.IsNullOrWhiteSpace(clickedColumn) ? "Code" : clickedColumn,
+                ascending: lastSort,
+                searchColumn: searchCol,
+                searchText: searchText
             );
 
-            productsGridView.DataSource = null;
             productsGridView.DataSource = products;
-
-            //if (productsGridView.Columns["Id"] != null)
-            //{
-            //    productsGridView.Columns["ProductId"].Visible = false;
-            //}
-=======
-            if (productsGridView.Columns["ProductId"] != null)
-            {
-                productsGridView.Columns["ProductId"].Visible = false;
-            }
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
-
             productsGridView.ClearSelection();
         }
+
+
 
         private void clearBoxes()
         {
             hiddenIdLabel.Text = "0";
             codeTextBox.Clear();
             nameTextBox.Clear();
-            shelfTextBox.Clear();
+            quantityTextBox.Clear();
             barcodeTextBox.Clear();
             priceTextBox.Clear();
 
@@ -215,9 +222,10 @@ namespace Stok_Takip
         {
             foreach (DataGridViewRow row in productsGridView.SelectedRows)
             {
-                int productId = Convert.ToInt32(row.Cells["ProductId"].Value);
-                stockService.deleteProduct(productId);
+                int productId = Convert.ToInt32(row.Cells["Id"].Value);
+                stockService_APIVersion.DeleteProductAsync(productId);
             }
+            clearBoxes();
             refreshList(clickedColumn, lastSort);
         }
 
@@ -225,9 +233,9 @@ namespace Stok_Takip
         private bool lastSort = true;
         string clickedColumn = "";
 
-        private void productsGridView_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        private async void productsGridView_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            string[] columns = { "product_id", "stock_code", "stock_name", "barcode", "shelf_no", "stock_group", "stock_type", "tax_rate", "price" };
+            string[] columns = { "Id", "Code", "Name", "Barcode", "Quantity", "Group", "Type", "TaxRate", "Price" };
             clickedColumn = columns[e.ColumnIndex];
 
             if (lastSortColumn == clickedColumn)
@@ -239,8 +247,10 @@ namespace Stok_Takip
                 lastSortColumn = clickedColumn;
                 lastSort = true;
             }
-            refreshList(clickedColumn, lastSort);
+
+            await refreshList(clickedColumn, lastSort);
         }
+
 
         private void productsGridView_SelectionChanged(object sender, EventArgs e)
         {
@@ -248,14 +258,13 @@ namespace Stok_Takip
             {
                 DataGridViewRow selectedRow = productsGridView.SelectedRows[0];
 
-                hiddenIdLabel.Text = selectedRow.Cells["ProductId"].Value?.ToString() ?? "";
-                codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
-                nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
+                hiddenIdLabel.Text = selectedRow.Cells["Id"].Value?.ToString() ?? "";
+                codeTextBox.Text = selectedRow.Cells["Code"].Value?.ToString() ?? "";
+                nameTextBox.Text = selectedRow.Cells["Name"].Value?.ToString() ?? "";
                 barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
-                shelfTextBox.Text = selectedRow.Cells["ShelfNo"].Value?.ToString() ?? "";
-
-                groupComboBox.Text = selectedRow.Cells["StockGroup"].Value?.ToString() ?? "";
-                typeComboBox.Text = selectedRow.Cells["StockType"].Value?.ToString() ?? "";
+                quantityTextBox.Text = selectedRow.Cells["Quantity"].Value?.ToString() ?? "";
+                groupComboBox.Text = selectedRow.Cells["Group"].Value?.ToString() ?? "";
+                typeComboBox.Text = selectedRow.Cells["Type"].Value?.ToString() ?? "";
                 taxComboBox.Text = selectedRow.Cells["TaxRate"].Value != null ? $"%{selectedRow.Cells["TaxRate"].Value}" : "";
                 priceTextBox.Text = selectedRow.Cells["Price"].Value?.ToString() ?? "";
             }
@@ -289,21 +298,21 @@ namespace Stok_Takip
         {
             if (selectedRow == null) return;
 
-            hiddenIdLabel.Text = selectedRow.Cells["ProductId"].Value?.ToString() ?? "";
-            codeTextBox.Text = selectedRow.Cells["StockCode"].Value?.ToString() ?? "";
-            nameTextBox.Text = selectedRow.Cells["StockName"].Value?.ToString() ?? "";
+            hiddenIdLabel.Text = selectedRow.Cells["Id"].Value?.ToString() ?? "";
+            codeTextBox.Text = selectedRow.Cells["Code"].Value?.ToString() ?? "";
+            nameTextBox.Text = selectedRow.Cells["Name"].Value?.ToString() ?? "";
             barcodeTextBox.Text = selectedRow.Cells["Barcode"].Value?.ToString() ?? "";
-            shelfTextBox.Text = selectedRow.Cells["ShelfNo"].Value?.ToString() ?? "";
+            quantityTextBox.Text = selectedRow.Cells["Quantity"].Value?.ToString() ?? "";
             priceTextBox.Text = selectedRow.Cells["Price"].Value?.ToString() ?? "";
 
-            string groupValue = selectedRow.Cells["StockGroup"].Value?.ToString();
+            string groupValue = selectedRow.Cells["Group"].Value?.ToString();
             if (!string.IsNullOrEmpty(groupValue))
             {
                 int index = groupComboBox.Items.IndexOf(groupValue);
                 if (index >= 0) groupComboBox.SelectedIndex = index;
             }
 
-            string typeValue = selectedRow.Cells["StockType"].Value?.ToString();
+            string typeValue = selectedRow.Cells["Type"].Value?.ToString();
             if (!string.IsNullOrEmpty(typeValue))
             {
                 int index = typeComboBox.Items.IndexOf(typeValue);
@@ -369,15 +378,12 @@ namespace Stok_Takip
             cancelButton.Visible = false;
         }
 
-<<<<<<< HEAD
         private void idShowCheck_CheckedChanged(object sender, EventArgs e)
         {
-            if (productsGridView.Columns["ProductId"] != null)
+            if (productsGridView.Columns["Id"] != null)
             {
-                productsGridView.Columns["ProductId"].Visible = idShowCheck.Checked;
+                productsGridView.Columns["Id"].Visible = idShowCheck.Checked;
             }
         }
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
     }
 }
