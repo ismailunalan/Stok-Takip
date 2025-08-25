@@ -6,7 +6,7 @@
         public string Code { get; set; }
         public string Name { get; set; }
         public string? Barcode { get; set; }
-        public int? ShelfNo { get; set; }
+        public int? Quantity { get; set; }
         public string? Group { get; set; }
         public string? Type { get; set; }
         public int? TaxRate { get; set; }
