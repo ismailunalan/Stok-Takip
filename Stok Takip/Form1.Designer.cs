@@ -60,7 +60,6 @@
             comboBox2 = new ComboBox();
             cancelButton = new Button();
             sqlCommand1 = new Microsoft.Data.SqlClient.SqlCommand();
-<<<<<<< HEAD
             idShowCheck = new CheckBox();
 =======
 >>>>>>> parent of b531999 (API implementation completed. Show ID button added)
@@ -374,7 +373,6 @@
             sqlCommand1.CommandTimeout = 30;
             sqlCommand1.EnableOptimizedParameterBinding = false;
             // 
-<<<<<<< HEAD
             // idShowCheck
             // 
             idShowCheck.AutoSize = true;
@@ -396,8 +394,6 @@
             ClientSize = new Size(1045, 700);
 <<<<<<< HEAD
             Controls.Add(idShowCheck);
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
             Controls.Add(cancelButton);
             Controls.Add(comboBox2);
             Controls.Add(eurBox);
@@ -471,6 +467,7 @@
         private ComboBox comboBox2;
         private Button cancelButton;
         private Microsoft.Data.SqlClient.SqlCommand sqlCommand1;
+        private RadioButton fsagasga;
         private CheckBox idShowCheck;
     }
 }

@@ -19,22 +19,22 @@ namespace WebAPI_V1.Services
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("SELECT Id, Code, Name, Barcode, ShelfNo, [Group], [Type], TaxRate, Price FROM Products", connection);
+                var command = new SqlCommand("SELECT * FROM Products", connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         products.Add(new Product
                         {
-                            Id = (int)reader["Id"],
-                            Code = reader["Code"].ToString(),
-                            Name = reader["Name"].ToString(),
-                            Barcode = reader["Barcode"].ToString(),
-                            ShelfNo = (int)reader["ShelfNo"],
-                            Group = reader["Group"].ToString(),
-                            Type = reader["Type"].ToString(),
-                            TaxRate = (int)reader["TaxRate"],
-                            Price = (int)reader["Price"]
+                            Id = (int)reader["product_id"],
+                            Code = reader["stock_code"].ToString(),
+                            Name = reader["stock_name"].ToString(),
+                            Barcode = reader["barcode"].ToString(),
+                            ShelfNo = (int)reader["shelf_no"],
+                            Group = reader["stock_group"].ToString(),
+                            Type = reader["stock_type"].ToString(),
+                            Tax = (int)reader["tax_rate"],
+                            Price = (int)reader["price"]
                         });
                     }
                 }
@@ -47,7 +47,7 @@ namespace WebAPI_V1.Services
             {
                 connection.Open();
                 
-                SqlCommand command = new SqlCommand("SELECT * FROM Products WHERE Id = @Id", connection);
+                SqlCommand command = new SqlCommand("SELECT * FROM Products WHERE product_id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", id);
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
@@ -55,15 +55,15 @@ namespace WebAPI_V1.Services
                     {
                         return new Product
                         {
-                            Id = (int)reader["Id"],
-                            Code = reader["Code"].ToString(),
-                            Name = reader["Name"].ToString(),
-                            Barcode = reader["Barcode"].ToString(),
-                            ShelfNo = (int)reader["ShelfNo"],
-                            Group = reader["Group"].ToString(),
-                            Type = reader["Type"].ToString(),
-                            TaxRate = (int)reader["TaxRate"],
-                            Price = (int)reader["Price"]
+                            Id = (int)reader["product_id"],
+                            Code = reader["stock_code"].ToString(),
+                            Name = reader["stock_name"].ToString(),
+                            Barcode = reader["barcode"].ToString(),
+                            ShelfNo = (int)reader["shelf_no"],
+                            Group = reader["stock_group"].ToString(),
+                            Type = reader["stock_type"].ToString(),
+                            Tax = (int)reader["tax_rate"],
+                            Price = (int)reader["price"]
                         };
                     }
                     else
@@ -80,7 +80,7 @@ namespace WebAPI_V1.Services
             {
                 connection.Open();
 
-                SqlCommand command = new SqlCommand("DELETE FROM Products WHERE Id = @Id", connection);
+                SqlCommand command = new SqlCommand("DELETE FROM Products WHERE product_id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", id);
                 int affectedRows = command.ExecuteNonQuery();
                 return affectedRows > 0;
@@ -92,7 +92,7 @@ namespace WebAPI_V1.Services
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                SqlCommand command = new SqlCommand("UPDATE Products SET Code = @Code, Name = @Name, Barcode = @Barcode, ShelfNo = @ShelfNo, Group = @Group, Type = @Type, TaxRate = @TaxRate, Price = @Price WHERE Id = @Id", connection);
+                SqlCommand command = new SqlCommand("UPDATE Products SET stock_code = @Code, stock_name = @Name, barcode = @Barcode, shelf_no = @ShelfNo, stock_group = @Group, stock_type = @Type, tax_rate = @Tax, price = @Price WHERE product_id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", product.Id);
                 command.Parameters.AddWithValue("@Code", product.Code);
                 command.Parameters.AddWithValue("@Name", product.Name);
@@ -100,28 +100,7 @@ namespace WebAPI_V1.Services
                 command.Parameters.AddWithValue("@ShelfNo", product.ShelfNo);
                 command.Parameters.AddWithValue("@Group", product.Group);
                 command.Parameters.AddWithValue("@Type", product.Type);
-                command.Parameters.AddWithValue("@TaxRate", product.TaxRate);
-                command.Parameters.AddWithValue("@Price", product.Price);
-                int affectedRows = command.ExecuteNonQuery();
-                return affectedRows > 0;
-            }
-        }
-
-        public bool Create(Product product)
-        {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                string query = @"INSERT INTO Products (Code, Name, Barcode, ShelfNo, [Group], [Type], TaxRate, Price)
-                                VALUES (@Code, @Name, @Barcode, @ShelfNo, @Group, @Type, @TaxRate, @Price);";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Code", product.Code);
-                command.Parameters.AddWithValue("@Name", product.Name);
-                command.Parameters.AddWithValue("@Barcode", product.Barcode);
-                command.Parameters.AddWithValue("@ShelfNo", product.ShelfNo);
-                command.Parameters.AddWithValue("@Group", product.Group);
-                command.Parameters.AddWithValue("@Type", product.Type);
-                command.Parameters.AddWithValue("@TaxRate", product.TaxRate);
+                command.Parameters.AddWithValue("@Tax", product.Tax);
                 command.Parameters.AddWithValue("@Price", product.Price);
                 int affectedRows = command.ExecuteNonQuery();
                 return affectedRows > 0;

@@ -23,17 +23,17 @@ namespace Stok_Takip.Services
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@code", p.Code);
-                    command.Parameters.AddWithValue("@name", p.Name);
+                    command.Parameters.AddWithValue("@code", p.StockCode);
+                    command.Parameters.AddWithValue("@name", p.StockName);
                     command.Parameters.AddWithValue("@barcode", (object?)p.Barcode ?? DBNull.Value);
                     command.Parameters.AddWithValue("@shelf", (object?)p.ShelfNo ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@group", (object?)p.Group ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@type", (object?)p.Type ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@group", (object?)p.StockGroup ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@type", (object?)p.StockType ?? DBNull.Value);
                     command.Parameters.AddWithValue("@tax", (object?)p.TaxRate ?? DBNull.Value);
                     command.Parameters.AddWithValue("@price", (object?)p.Price ?? DBNull.Value);
 
                     object result = command.ExecuteScalar();
-                    p.Id = Convert.ToInt32(result);
+                    p.ProductId = Convert.ToInt32(result);
                     MessageBox.Show("Ürün başarıyla kaydedildi!");
                 }
             }
@@ -45,7 +45,7 @@ namespace Stok_Takip.Services
             {
                 connection.Open();
 
-                string query = "DELETE FROM Products WHERE Id = @id";
+                string query = "DELETE FROM Products WHERE product_id = @id";
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@id", productId);
@@ -55,7 +55,7 @@ namespace Stok_Takip.Services
             }
         }
 
-        public List<Product> getProducts(string sortColumn = "Code", bool ascending = true, string? searchColumn = null, string? searchText = null)
+        public List<Product> getProducts(string sortColumn = "stock_code", bool ascending = true, string? searchColumn = null, string? searchText = null)
         {
             List<Product> products = new List<Product>();
 
@@ -66,7 +66,7 @@ namespace Stok_Takip.Services
                 string direction = ascending ? "ASC" : "DESC";
                 string query;
 
-                string columns = "Id, Code, Name, Barcode, ShelfNo , Group, Type, TaxRate, Price";
+                string columns = "product_id, stock_code, stock_name, barcode, shelf_no, stock_group, stock_type, tax_rate, price";
 
                 if (!string.IsNullOrWhiteSpace(searchText) && !string.IsNullOrWhiteSpace(searchColumn))
                 {
@@ -89,13 +89,13 @@ namespace Stok_Takip.Services
                     {
                         products.Add(new Product
                         {
-                            Id = Convert.ToInt32(reader["Id"]),
-                            Code = reader["stock_code"].ToString(),
-                            Name = reader["stock_name"].ToString(),
+                            ProductId = Convert.ToInt32(reader["product_id"]),
+                            StockCode = reader["stock_code"].ToString(),
+                            StockName = reader["stock_name"].ToString(),
                             Barcode = reader["barcode"] == DBNull.Value ? null : reader["barcode"].ToString(),
                             ShelfNo = reader["shelf_no"] == DBNull.Value ? null : (int?)Convert.ToInt32(reader["shelf_no"]),
-                            Group = reader["stock_group"] == DBNull.Value ? null : reader["stock_group"].ToString(),
-                            Type = reader["stock_type"] == DBNull.Value ? null : reader["stock_type"].ToString(),
+                            StockGroup = reader["stock_group"] == DBNull.Value ? null : reader["stock_group"].ToString(),
+                            StockType = reader["stock_type"] == DBNull.Value ? null : reader["stock_type"].ToString(),
                             TaxRate = reader["tax_rate"] == DBNull.Value ? null : (int?)Convert.ToInt32(reader["tax_rate"]),
                             Price = reader["price"] == DBNull.Value ? null : (decimal?)Convert.ToDecimal(reader["price"])
                         });
@@ -120,17 +120,17 @@ namespace Stok_Takip.Services
                                      stock_type = @type,
                                      tax_rate = @tax,
                                      price = @price
-                                 WHERE Id = @id";
+                                 WHERE product_id = @id";
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@id", p.Id);
-                    command.Parameters.AddWithValue("@code", p.Code);
-                    command.Parameters.AddWithValue("@name", p.Name);
+                    command.Parameters.AddWithValue("@id", p.ProductId);
+                    command.Parameters.AddWithValue("@code", p.StockCode);
+                    command.Parameters.AddWithValue("@name", p.StockName);
                     command.Parameters.AddWithValue("@barcode", (object?)p.Barcode ?? DBNull.Value);
                     command.Parameters.AddWithValue("@shelf", (object?)p.ShelfNo ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@group", (object?)p.Group ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@type", (object?)p.Type ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@group", (object?)p.StockGroup ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@type", (object?)p.StockType ?? DBNull.Value);
                     command.Parameters.AddWithValue("@tax", (object?)p.TaxRate ?? DBNull.Value);
                     command.Parameters.AddWithValue("@price", (object?)p.Price ?? DBNull.Value);
 
