@@ -60,9 +60,6 @@
             comboBox2 = new ComboBox();
             cancelButton = new Button();
             sqlCommand1 = new Microsoft.Data.SqlClient.SqlCommand();
-            idShowCheck = new CheckBox();
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
             ((System.ComponentModel.ISupportInitialize)productsGridView).BeginInit();
             SuspendLayout();
             // 
@@ -373,27 +370,12 @@
             sqlCommand1.CommandTimeout = 30;
             sqlCommand1.EnableOptimizedParameterBinding = false;
             // 
-            // idShowCheck
-            // 
-            idShowCheck.AutoSize = true;
-            idShowCheck.Location = new Point(431, 391);
-            idShowCheck.Name = "idShowCheck";
-            idShowCheck.Size = new Size(105, 29);
-            idShowCheck.TabIndex = 39;
-            idShowCheck.Text = "Show ID";
-            idShowCheck.UseVisualStyleBackColor = true;
-            idShowCheck.CheckedChanged += idShowCheck_CheckedChanged;
-            // 
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ButtonFace;
             ClientSize = new Size(1045, 700);
-<<<<<<< HEAD
-            Controls.Add(idShowCheck);
             Controls.Add(cancelButton);
             Controls.Add(comboBox2);
             Controls.Add(eurBox);
@@ -467,7 +449,5 @@
         private ComboBox comboBox2;
         private Button cancelButton;
         private Microsoft.Data.SqlClient.SqlCommand sqlCommand1;
-        private RadioButton fsagasga;
-        private CheckBox idShowCheck;
     }
 }

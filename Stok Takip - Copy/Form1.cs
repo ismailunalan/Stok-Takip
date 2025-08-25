@@ -32,13 +32,6 @@ namespace Stok_Takip
             setSearchByState();
             comboBox1.SelectedIndex = 0;
             currencyDisplayer(sender, e);
-            if (productsGridView.Columns["ProductId"] != null)
-            {
-                productsGridView.Columns["Id"].Visible = idShowCheck.Checked;
-            }
-
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
         }
 
         private async void currencyDisplayer(object sender, EventArgs e)
@@ -178,16 +171,10 @@ namespace Stok_Takip
             productsGridView.DataSource = null;
             productsGridView.DataSource = products;
 
-            //if (productsGridView.Columns["Id"] != null)
-            //{
-            //    productsGridView.Columns["ProductId"].Visible = false;
-            //}
-=======
             if (productsGridView.Columns["ProductId"] != null)
             {
                 productsGridView.Columns["ProductId"].Visible = false;
             }
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
 
             productsGridView.ClearSelection();
         }
@@ -369,15 +356,5 @@ namespace Stok_Takip
             cancelButton.Visible = false;
         }
 
-<<<<<<< HEAD
-        private void idShowCheck_CheckedChanged(object sender, EventArgs e)
-        {
-            if (productsGridView.Columns["ProductId"] != null)
-            {
-                productsGridView.Columns["ProductId"].Visible = idShowCheck.Checked;
-            }
-        }
-=======
->>>>>>> parent of b531999 (API implementation completed. Show ID button added)
     }
 }
